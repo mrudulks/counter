@@ -7,7 +7,7 @@ Next.js 16 (App Router) + Tailwind CSS 4 client for the [pos-backend](../pos-bac
 ```bash
 npm install
 cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:4500/api
-npm run dev                  # http://localhost:3000
+npm run dev                  # http://localhost:8000
 ```
 
 The backend must be running and its `CORS_ORIGIN` must include this app's URL.
