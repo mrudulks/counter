@@ -1,6 +1,6 @@
-# Counter — Restaurant POS (frontend)
+# Counter — web app
 
-Next.js 16 (App Router) + Tailwind CSS 4 client for the [pos-backend](../pos-backend) API.
+Next.js 16 (App Router) + Tailwind CSS 4 client for the [Counter API](../api).
 
 ## Setup
 

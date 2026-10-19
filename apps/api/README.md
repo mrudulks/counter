@@ -1,4 +1,4 @@
-# Restaurant POS — backend
+# Counter — API
 
 Express 5 + TypeScript + MongoDB (Mongoose) REST API for a multi-restaurant POS.
 

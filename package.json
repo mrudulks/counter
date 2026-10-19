@@ -1,0 +1,13 @@
+{
+  "name": "counter",
+  "private": true,
+  "description": "Counter — multi-restaurant POS: floor, kitchen ticket rail and admin, with live order updates",
+  "scripts": {
+    "install:all": "npm --prefix apps/api install && npm --prefix apps/web install",
+    "dev:api": "npm --prefix apps/api run dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "seed": "npm --prefix apps/api run seed",
+    "build": "npm --prefix apps/api run build && npm --prefix apps/web run build",
+    "typecheck": "npm --prefix apps/api run typecheck && cd apps/web && npx tsc --noEmit"
+  }
+}

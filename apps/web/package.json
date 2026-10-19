@@ -1,5 +1,5 @@
 {
-  "name": "pos-frontend",
+  "name": "counter-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -26,5 +26,6 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "description": "Counter restaurant POS \u2014 web app"
 }
