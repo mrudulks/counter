@@ -13,7 +13,7 @@ export const env = {
   mongoUri: required('MONGO_URI', 'mongodb://127.0.0.1:27017/restaurant_pos'),
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
-  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:8000',
   superadmin: {
     name: process.env.SUPERADMIN_NAME ?? 'Super Admin',
     email: (process.env.SUPERADMIN_EMAIL ?? 'superadmin@pos.local').toLowerCase(),
