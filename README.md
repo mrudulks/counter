@@ -51,6 +51,7 @@ All routes except login need `Authorization: Bearer <token>`. Restaurant-scoped 
 | POST | `/api/restaurants/:rid/orders` `{type, table?, items:[{menuItem, quantity, notes?}]}` | staff, admin+ |
 | POST | `/api/restaurants/:rid/orders/:id/items` `{items}` | staff, admin+ |
 | PATCH | `/api/restaurants/:rid/orders/:id/items/:itemId` `{status?, quantity?, notes?}` | role-based transitions |
+| POST | `/api/restaurants/:rid/orders/:id/items/status` `{itemIds, status}` | bulk version, same role rules |
 | POST | `/api/restaurants/:rid/orders/:id/complete` `{paymentMethod: cash|card|upi}` | staff, admin+ |
 | POST | `/api/restaurants/:rid/orders/:id/cancel` | staff (if nothing cooking), admin+ |
 | GET | `/api/restaurants/:rid/orders/stats/summary` | admin+ |
@@ -60,3 +61,25 @@ All routes except login need `Authorization: Bearer <token>`. Restaurant-scoped 
 - Item name/price are snapshotted on the order; totals exclude cancelled items and apply the restaurant's `taxPercent`.
 - An order can be paid only when every non-cancelled item is `served`.
 - Order numbers are sequential per restaurant.
+
+## Realtime (Socket.IO)
+
+Socket.IO runs on the same port as the API. Connect with the JWT:
+
+```js
+const socket = io('http://localhost:4500', { auth: { token } });
+socket.emit('restaurant:join', restaurantId); // superadmin only; others auto-join their restaurant
+socket.on('order:event', ({ type, order, itemIds, actor }) => { ... });
+```
+
+Every order change is broadcast to everyone in that restaurant's room:
+
+| `type` | When | `itemIds` |
+|---|---|---|
+| `created` | new order placed | — |
+| `items-added` | another round sent to the kitchen | the new items |
+| `items-updated` | item(s) started / ready / served / voided | the changed items |
+| `completed` | order paid | — |
+| `cancelled` | order cancelled | — |
+
+`order` is the full populated order; `actor` is `{ id, name }` of whoever made the change.

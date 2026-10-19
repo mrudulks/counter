@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Router } from 'express';
 import { z } from 'zod';
 import { Types } from 'mongoose';
 import { Order, ITEM_STATUSES, PAYMENT_METHODS } from '../models/Order';
@@ -10,6 +10,7 @@ import { Role } from '../models/User';
 import { authorize, restaurantIdOf } from '../middleware/auth';
 import { validateBody, objectId } from '../middleware/validate';
 import { HttpError } from '../utils/HttpError';
+import { emitOrderEvent, OrderEventType } from '../realtime';
 
 // Mounted at /api/restaurants/:restaurantId/orders
 const router = Router({ mergeParams: true });
@@ -61,6 +62,25 @@ async function releaseTable(order: OrderDoc) {
   if (!order.table) return;
   const stillOpen = await Order.exists({ table: order.table, status: 'open', _id: { $ne: order._id } });
   if (!stillOpen) await Table.findByIdAndUpdate(order.table, { status: 'available' });
+}
+
+function assertTransition(role: Role, from: ItemStatus, to: ItemStatus) {
+  const allowed = TRANSITIONS[role];
+  if (allowed && !allowed[from]?.includes(to)) {
+    throw new HttpError(403, `You cannot change an item from ${from} to ${to}`);
+  }
+}
+
+/** Populates the order, broadcasts it to the restaurant's room and returns it for the response. */
+async function publish(req: Request, type: OrderEventType, order: OrderDoc, itemIds?: string[]) {
+  const populated = await order.populate(POPULATE);
+  emitOrderEvent(order.restaurant, {
+    type,
+    order: populated.toJSON(),
+    itemIds,
+    actor: { id: req.user!.id, name: req.user!.name },
+  });
+  return populated;
 }
 
 async function findOpenOrder(restaurantId: string, orderId: string) {
@@ -131,7 +151,7 @@ router.post(
     await order.save();
     if (table) await Table.findByIdAndUpdate(table._id, { status: 'occupied' });
 
-    res.status(201).json(await order.populate(POPULATE));
+    res.status(201).json(await publish(req, 'created', order));
   },
 );
 
@@ -142,10 +162,12 @@ router.post(
   async (req, res) => {
     const restaurantId = restaurantIdOf(req);
     const order = await findOpenOrder(restaurantId, req.params.orderId as string);
+    const before = order.items.length;
     order.items.push(...(await resolveItems(restaurantId, req.body.items)));
     await recalculate(order);
     await order.save();
-    res.json(await order.populate(POPULATE));
+    const added = order.items.slice(before).map((i) => String(i._id));
+    res.json(await publish(req, 'items-added', order, added));
   },
 );
 
@@ -168,10 +190,7 @@ router.patch(
     const { status, quantity, notes } = req.body;
 
     if (status && status !== item.status) {
-      const allowed = TRANSITIONS[role];
-      if (allowed && !allowed[item.status as ItemStatus]?.includes(status)) {
-        throw new HttpError(403, `You cannot change an item from ${item.status} to ${status}`);
-      }
+      assertTransition(role, item.status as ItemStatus, status);
       item.status = status;
     }
 
@@ -184,7 +203,32 @@ router.patch(
 
     await recalculate(order);
     await order.save();
-    res.json(await order.populate(POPULATE));
+    res.json(await publish(req, 'items-updated', order, [String(item._id)]));
+  },
+);
+
+// Move several items to the same status at once (e.g. kitchen "All ready", floor "Serve all")
+router.post(
+  '/:orderId/items/status',
+  authorize('superadmin', 'admin', 'staff', 'kitchen'),
+  validateBody(z.object({ itemIds: z.array(objectId).min(1), status: z.enum(ITEM_STATUSES) })),
+  async (req, res) => {
+    const order = await findOpenOrder(restaurantIdOf(req), req.params.orderId as string);
+    const role = req.user!.role as Role;
+    const { itemIds, status } = req.body as { itemIds: string[]; status: ItemStatus };
+
+    const items = itemIds.map((id) => {
+      const item = order.items.id(id);
+      if (!item) throw new HttpError(404, 'Order item not found');
+      return item;
+    });
+    const changing = items.filter((i) => i.status !== status);
+    changing.forEach((i) => assertTransition(role, i.status as ItemStatus, status));
+    changing.forEach((i) => (i.status = status));
+
+    await recalculate(order);
+    await order.save();
+    res.json(await publish(req, 'items-updated', order, changing.map((i) => String(i._id))));
   },
 );
 
@@ -204,7 +248,7 @@ router.post(
     order.paymentMethod = req.body.paymentMethod;
     await order.save();
     await releaseTable(order);
-    res.json(await order.populate(POPULATE));
+    res.json(await publish(req, 'completed', order));
   },
 );
 
@@ -221,7 +265,7 @@ router.post('/:orderId/cancel', authorize('superadmin', 'admin', 'staff'), async
   await recalculate(order);
   await order.save();
   await releaseTable(order);
-  res.json(await order.populate(POPULATE));
+  res.json(await publish(req, 'cancelled', order));
 });
 
 router.get('/stats/summary', authorize('superadmin', 'admin'), async (req, res) => {

@@ -12,21 +12,24 @@ declare global {
   }
 }
 
-export async function authenticate(req: Request, _res: Response, next: NextFunction) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) throw new HttpError(401, 'Not authenticated');
-
+/** Resolves an active user from a JWT, or throws a 401 HttpError. Shared by HTTP and socket auth. */
+export async function userFromToken(token: string): Promise<UserDoc> {
   let payload: { sub: string };
   try {
-    payload = jwt.verify(header.slice(7), env.jwtSecret) as { sub: string };
+    payload = jwt.verify(token, env.jwtSecret) as { sub: string };
   } catch {
     throw new HttpError(401, 'Invalid or expired token');
   }
 
   const user = (await User.findById(payload.sub)) as UserDoc | null;
   if (!user || !user.isActive) throw new HttpError(401, 'Account not found or disabled');
+  return user;
+}
 
-  req.user = user;
+export async function authenticate(req: Request, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) throw new HttpError(401, 'Not authenticated');
+  req.user = await userFromToken(header.slice(7));
   next();
 }
 
