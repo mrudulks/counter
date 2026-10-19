@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Counter — Restaurant POS (frontend)
 
-## Getting Started
+Next.js 16 (App Router) + Tailwind CSS 4 client for the [pos-backend](../pos-backend) API.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:4500/api
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The backend must be running and its `CORS_ORIGIN` must include this app's URL.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Screens by role
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Role        | Lands on      | Can use                                                                 |
+|-------------|---------------|-------------------------------------------------------------------------|
+| Super admin | `/restaurants`| Add/edit/delete restaurants, then "Work in this restaurant" to get every screen below for it |
+| Admin       | `/dashboard`  | Today, Floor, Orders, Kitchen, Menu, Tables, Team, Settings             |
+| Staff       | `/floor`      | Floor (tables + takeaway), order screen, Orders                         |
+| Kitchen     | `/kitchen`    | Kitchen ticket rail                                                     |
 
-## Learn More
+## Order flow
 
-To learn more about Next.js, take a look at the following resources:
+1. **Floor** — tap a table (or *New takeaway*). A table with an open order opens that order.
+2. **Order screen** — tap dishes to build a draft, add notes, *Send to kitchen*. Add more rounds anytime.
+3. **Kitchen** — tickets appear on the rail (polls every 5 s). Tap a dish: *Start* → *Mark ready*, or use *Start all* / *All ready*.
+4. **Order screen** — staff *Mark served* on ready items, then *Take payment* (cash / card / UPI). The table frees up.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Staff can void or change quantity only on items the kitchen hasn't started; cancelling an order that's already cooking needs an admin.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Structure
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/login/                 sign-in
+  app/(app)/                 signed-in area (AppShell: auth guard + role nav)
+    restaurants/ dashboard/ floor/ orders/ kitchen/ account/
+    pos/table/[tableId]  pos/takeaway  pos/order/[orderId]
+    manage/menu  manage/tables  manage/team  manage/settings
+  components/                OrderScreen, Guard, AppShell, ui primitives, toast
+  lib/                       api client, session (auth + active restaurant), useFetch, types
+```
