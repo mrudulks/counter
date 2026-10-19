@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useScope, useSession } from '@/lib/session';
 import { useFetch } from '@/lib/useFetch';
+import { useOrderEvents } from '@/lib/realtime';
 import { money } from '@/lib/format';
 import type { Stats, Table } from '@/lib/types';
 import { Guard } from '@/components/Guard';
@@ -13,6 +14,11 @@ function Dashboard() {
   const { restaurant } = useSession();
   const stats = useFetch<Stats>(`${scope}/orders/stats/summary`, 30000);
   const tables = useFetch<Table[]>(`${scope}/tables`, 30000);
+  useOrderEvents((e) => {
+    if (e.type === 'items-updated') return;
+    stats.reload();
+    tables.reload();
+  });
 
   if (stats.loading) return <Loading />;
   if (stats.error || !stats.data) return <ErrorNote message={stats.error ?? 'Could not load today’s numbers'} />;

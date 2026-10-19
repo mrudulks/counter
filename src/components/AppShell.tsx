@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 import { useSession } from '@/lib/session';
 import { NAV } from '@/components/nav';
 import { Loading } from '@/components/ui';
+import { OrderNotifier } from '@/components/OrderNotifier';
+import { useRealtimeStatus } from '@/lib/realtime';
 
 const ROLE_LABEL = { superadmin: 'Super admin', admin: 'Admin', staff: 'Floor staff', kitchen: 'Kitchen' };
 
@@ -13,6 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, ready, restaurant, logout } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const live = useRealtimeStatus();
 
   useEffect(() => {
     if (ready && !user) router.replace('/login');
@@ -33,6 +36,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <p className="truncate text-sm text-steel/70">
               {restaurant?.name ?? (user.role === 'superadmin' ? 'No restaurant selected' : '—')}
             </p>
+            {restaurant && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-steel/60" title="Orders update instantly while live">
+                <span className={`h-2 w-2 rounded-full ${live ? 'bg-free' : 'bg-seated'}`} aria-hidden />
+                {live ? 'Live updates on' : 'Reconnecting…'}
+              </p>
+            )}
           </div>
           <div className="flex shrink-0 gap-1 text-sm lg:hidden">
             <Link href="/account" className="rounded-md px-3 py-1.5 text-steel/80 hover:bg-white/10">Account</Link>
@@ -69,6 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
+      {restaurant && <OrderNotifier />}
     </div>
   );
 }

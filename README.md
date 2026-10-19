@@ -25,10 +25,24 @@ The backend must be running and its `CORS_ORIGIN` must include this app's URL.
 
 1. **Floor** — tap a table (or *New takeaway*). A table with an open order opens that order.
 2. **Order screen** — tap dishes to build a draft, add notes, *Send to kitchen*. Add more rounds anytime.
-3. **Kitchen** — tickets appear on the rail (polls every 5 s). Tap a dish: *Start* → *Mark ready*, or use *Start all* / *All ready*.
+3. **Kitchen** — tickets drop onto the rail the instant they're sent. Tap a dish: *Start* → *Mark ready*, or use *Start all* / *All ready*.
 4. **Order screen** — staff *Mark served* on ready items, then *Take payment* (cash / card / UPI). The table frees up.
 
 Staff can void or change quantity only on items the kitchen hasn't started; cancelling an order that's already cooking needs an admin.
+
+## Live notifications
+
+The app keeps a Socket.IO connection to the API (sidebar shows *Live updates on*). Screens update the moment anyone changes an order, and teammates get a toast (plus a chime when someone needs to act):
+
+| Event | Kitchen | Floor staff | Admin |
+|---|---|---|---|
+| New order / more items sent | toast + chime | — | toast + chime |
+| Dishes ready | — | toast + chime | toast + chime |
+| Item voided | toast | — | toast |
+| Order paid / cancelled | toast | toast | toast |
+
+You never get a toast for your own actions. Polling every 30 s remains as a fallback if the socket drops.
+Set `NEXT_PUBLIC_SOCKET_URL` only if the socket server isn't on the API's origin.
 
 ## Structure
 

@@ -2,23 +2,34 @@
 
 import { createContext, useCallback, useContext, useState } from 'react';
 
-type Tone = 'ok' | 'error';
+/** ok/error answer the user's own action; notice is news from someone else (realtime). */
+type Tone = 'ok' | 'error' | 'notice';
 interface Toast {
   id: number;
   message: string;
+  title?: string;
   tone: Tone;
 }
 
-const ToastContext = createContext<(message: string, tone?: Tone) => void>(() => {});
+type Notify = (message: string, tone?: Tone, title?: string) => void;
+
+const ToastContext = createContext<Notify>(() => {});
+
+const DURATION: Record<Tone, number> = { ok: 3500, error: 5000, notice: 8000 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const notify = useCallback((message: string, tone: Tone = 'ok') => {
-    const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message, tone }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
-  }, []);
+  const dismiss = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+
+  const notify = useCallback<Notify>(
+    (message, tone = 'ok', title) => {
+      const id = Date.now() + Math.random();
+      setToasts((t) => [...t.slice(-4), { id, message, title, tone }]);
+      setTimeout(() => dismiss(id), DURATION[tone]);
+    },
+    [dismiss],
+  );
 
   return (
     <ToastContext.Provider value={notify}>
@@ -28,11 +39,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             role={t.tone === 'error' ? 'alert' : 'status'}
-            className={`toast-in pointer-events-auto max-w-sm rounded-md px-4 py-3 text-sm font-medium shadow-lg ${
-              t.tone === 'error' ? 'bg-chili text-white' : 'bg-ink text-steel'
+            onClick={() => dismiss(t.id)}
+            className={`toast-in pointer-events-auto w-full max-w-sm cursor-pointer rounded-md px-4 py-3 text-sm shadow-lg sm:w-80 ${
+              t.tone === 'error'
+                ? 'bg-chili font-medium text-white'
+                : t.tone === 'notice'
+                  ? 'border-l-4 border-seated bg-paper text-ink'
+                  : 'bg-ink font-medium text-steel'
             }`}
           >
-            {t.message}
+            {t.title && <p className="font-bold">{t.title}</p>}
+            <p className={t.tone === 'notice' ? 'mt-0.5 font-ticket' : ''}>{t.message}</p>
           </div>
         ))}
       </div>

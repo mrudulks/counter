@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Archivo, Courier_Prime } from 'next/font/google';
 import { SessionProvider } from '@/lib/session';
 import { ToastProvider } from '@/components/toast';
+import { RealtimeProvider } from '@/lib/realtime';
 import './globals.css';
 
 const archivo = Archivo({ variable: '--font-archivo', subsets: ['latin'], axes: ['wdth'] });
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="en" className={`${archivo.variable} ${courier.variable} h-full antialiased`}>
       <body className="min-h-full">
         <SessionProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <RealtimeProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </RealtimeProvider>
         </SessionProvider>
       </body>
     </html>

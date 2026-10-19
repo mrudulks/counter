@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useScope, useSession } from '@/lib/session';
 import { useFetch } from '@/lib/useFetch';
+import { useOrderEvents } from '@/lib/realtime';
 import { clockTime, money, timeAgo } from '@/lib/format';
 import type { Order, OrderStatus } from '@/lib/types';
 import { Guard } from '@/components/Guard';
@@ -28,11 +29,12 @@ function Orders() {
   const scope = useScope();
   const { restaurant } = useSession();
   const [tab, setTab] = useState<OrderStatus>('open');
-  const orders = useFetch<Order[]>(`${scope}/orders?status=${tab}`, tab === 'open' ? 8000 : undefined);
+  const orders = useFetch<Order[]>(`${scope}/orders?status=${tab}`, tab === 'open' ? 30000 : undefined);
+  useOrderEvents(() => orders.reload());
 
   return (
     <>
-      <PageHeader title="Orders" subtitle="Open orders refresh on their own." />
+      <PageHeader title="Orders" subtitle="Updates live as the floor and kitchen work." />
       <div className="mb-5 inline-flex rounded-md bg-steel-deep p-1" role="tablist">
         {TABS.map((t) => (
           <button

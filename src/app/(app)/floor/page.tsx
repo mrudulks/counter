@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useScope, useSession } from '@/lib/session';
 import { useFetch } from '@/lib/useFetch';
+import { useOrderEvents } from '@/lib/realtime';
 import { api } from '@/lib/api';
 import { errorMessage, money } from '@/lib/format';
 import type { Order, Table, TableStatus } from '@/lib/types';
@@ -20,8 +21,13 @@ function Floor() {
   const scope = useScope();
   const { restaurant } = useSession();
   const notify = useToast();
-  const tables = useFetch<Table[]>(`${scope}/tables`, 10000);
-  const takeaways = useFetch<Order[]>(`${scope}/orders?status=open`, 10000);
+  const tables = useFetch<Table[]>(`${scope}/tables`, 30000);
+  const takeaways = useFetch<Order[]>(`${scope}/orders?status=open`, 30000);
+  useOrderEvents((e) => {
+    if (e.type !== 'items-updated') tables.reload();
+    takeaways.reload();
+  });
+
   const openTakeaways = (takeaways.data ?? []).filter((o) => o.type === 'takeaway');
 
   async function toggleReserved(t: Table) {

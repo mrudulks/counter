@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import { useScope } from '@/lib/session';
+import { useOrderEvents } from '@/lib/realtime';
 import { useFetch } from '@/lib/useFetch';
 import { clockTime, errorMessage } from '@/lib/format';
 import type { ItemStatus, Order, OrderItem } from '@/lib/types';
@@ -87,7 +88,7 @@ function Ticket({ order, isNew, onAdvance }: { order: Order; isNew: boolean; onA
 function Kitchen() {
   const scope = useScope();
   const notify = useToast();
-  const orders = useFetch<Order[]>(`${scope}/orders?status=open`, 5000);
+  const orders = useFetch<Order[]>(`${scope}/orders?status=open`, 30000);
   const seen = useRef<Set<string> | null>(null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
 
@@ -106,15 +107,27 @@ function Kitchen() {
     seen.current = ids;
   }, [orders.data]);
 
+  function upsert(order: Order) {
+    orders.setData((all) => {
+      if (!all) return all;
+      if (order.status !== 'open') return all.filter((o) => o._id !== order._id);
+      return all.some((o) => o._id === order._id) ? all.map((o) => (o._id === order._id ? order : o)) : [...all, order];
+    });
+  }
+
+  useOrderEvents((e) => upsert(e.order));
+
   async function advance(order: Order, items: OrderItem[]) {
+    // Items passed together always share a status (one dish, or a "Start all" / "All ready" group)
+    const next = NEXT[items[0].status];
+    if (!next) return;
     try {
-      let latest = order;
-      for (const item of items) {
-        const next = NEXT[item.status];
-        if (!next) continue;
-        latest = await api<Order>(`${scope}/orders/${order._id}/items/${item._id}`, 'PATCH', { status: next.to });
-      }
-      orders.setData((all) => all?.map((o) => (o._id === latest._id ? latest : o)) ?? null);
+      upsert(
+        await api<Order>(`${scope}/orders/${order._id}/items/status`, 'POST', {
+          itemIds: items.map((i) => i._id),
+          status: next.to,
+        }),
+      );
     } catch (err) {
       notify(errorMessage(err), 'error');
       orders.reload();

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { useScope, useSession } from '@/lib/session';
 import { useFetch } from '@/lib/useFetch';
+import { useOrderEvents } from '@/lib/realtime';
 import { errorMessage, money } from '@/lib/format';
 import type { MenuItem, Order, OrderItem, PaymentMethod, Table } from '@/lib/types';
 import { Button, ErrorNote, Input, Loading, Modal, VegMark } from './ui';
@@ -29,8 +30,12 @@ export function OrderScreen(props: Props) {
   const notify = useToast();
 
   const menu = useFetch<MenuItem[]>(`${scope}/menu`);
-  const existing = useFetch<Order>(props.mode === 'existing' ? `${scope}/orders/${props.orderId}` : null, 8000);
+  const existing = useFetch<Order>(props.mode === 'existing' ? `${scope}/orders/${props.orderId}` : null, 30000);
   const order = existing.data;
+
+  useOrderEvents((e) => {
+    if (props.mode === 'existing' && e.order._id === props.orderId) existing.setData(e.order);
+  });
 
   const [category, setCategory] = useState<string>('All');
   const [search, setSearch] = useState('');
@@ -115,8 +120,11 @@ export function OrderScreen(props: Props) {
   }
 
   async function serveAllReady() {
-    const ready = order!.items.filter((i) => i.status === 'ready');
-    for (const item of ready) await updateItem(item, { status: 'served' });
+    const itemIds = order!.items.filter((i) => i.status === 'ready').map((i) => i._id);
+    const updated = await run('serve', () =>
+      api<Order>(`${scope}/orders/${order!._id}/items/status`, 'POST', { itemIds, status: 'served' }),
+    );
+    if (updated) existing.setData(updated);
   }
 
   async function cancelOrder() {
