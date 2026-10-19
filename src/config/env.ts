@@ -10,7 +10,9 @@ function required(name: string, fallback?: string): string {
 
 export const env = {
   port: Number(process.env.PORT ?? 4500),
-  mongoUri: required('MONGO_URI', 'mongodb://127.0.0.1:27017/restaurant_pos'),
+  // MONGO_URL is what Railway's MongoDB service exposes
+  mongoUri: required('MONGO_URI', process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017/restaurant_pos'),
+  mongoDbName: process.env.MONGO_DB_NAME ?? 'restaurant_pos',
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:8000',
