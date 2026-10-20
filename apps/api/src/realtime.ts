@@ -24,7 +24,7 @@ const room = (restaurantId: unknown) => `restaurant:${String(restaurantId)}`;
  * fixed restaurant, so the client tells us which one it is viewing via `restaurant:join`.
  */
 export function initRealtime(server: HttpServer) {
-  io = new Server(server, { cors: { origin: env.corsOrigin.split(','), credentials: true } });
+  io = new Server(server, { cors: { origin: env.corsOrigins, credentials: true } });
 
   io.use(async (socket, next) => {
     try {

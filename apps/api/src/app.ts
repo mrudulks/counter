@@ -12,7 +12,7 @@ import orderRoutes from './routes/orders';
 
 export const app = express();
 
-app.use(cors({ origin: env.corsOrigin.split(','), credentials: true }));
+app.use(cors({ origin: env.corsOrigins, credentials: true }));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {

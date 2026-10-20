@@ -10,6 +10,7 @@ async function main() {
   await ensureSuperadmin();
   const server = http.createServer(app);
   initRealtime(server);
+  console.log(`Allowed web origins: ${env.corsOrigins.join(', ')}`);
   server.listen(env.port, () => console.log(`API + realtime listening on http://localhost:${env.port}`));
 }
 
