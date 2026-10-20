@@ -1,14 +1,15 @@
 'use client';
 
 import { forwardRef, useEffect, useRef } from 'react';
+import { UtensilsCrossed } from 'lucide-react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-teal text-white hover:bg-teal-deep',
-  secondary: 'bg-panel text-ink border border-line hover:bg-steel-deep',
+  primary: 'bg-brand text-white shadow-sm shadow-brand/25 hover:bg-brand-deep',
+  secondary: 'bg-panel text-ink border border-line hover:border-brand/40 hover:text-brand',
   ghost: 'text-ink-soft hover:bg-steel-deep hover:text-ink',
-  danger: 'bg-chili text-white hover:bg-[#962821]',
+  danger: 'bg-chili text-white hover:bg-[#c93a3f]',
 };
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,12 +19,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export function Button({ variant = 'primary', size = 'md', busy, className = '', children, disabled, ...rest }: ButtonProps) {
-  const sizes = { sm: 'h-8 px-3 text-sm', md: 'h-10 px-4 text-sm', lg: 'h-14 px-6 text-base' };
+  const sizes = { sm: 'h-8 px-3 text-sm rounded-lg', md: 'h-10 px-4 text-sm rounded-xl', lg: 'h-12 px-6 text-[15px] rounded-xl' };
   return (
     <button
       {...rest}
       disabled={disabled || busy}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${sizes[size]} ${className}`}
     >
       {busy ? 'Working…' : children}
     </button>
@@ -31,7 +32,7 @@ export function Button({ variant = 'primary', size = 'md', busy, className = '',
 }
 
 const inputClass =
-  'h-10 w-full rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-soft/70 focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/25';
+  'h-10 w-full rounded-xl border border-line bg-white px-3.5 text-sm text-ink placeholder:text-ink-soft/70 focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15';
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className = '', ...rest },
@@ -58,7 +59,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
       <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span className="relative h-5 w-9 rounded-full bg-line transition-colors peer-checked:bg-teal peer-focus-visible:ring-2 peer-focus-visible:ring-teal after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4" />
+      <span className="relative h-5 w-9 rounded-full bg-line transition-colors peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4" />
       {label}
     </label>
   );
@@ -91,12 +92,12 @@ export function Modal({
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className={`m-auto w-[calc(100%-2rem)] rounded-lg bg-panel p-0 text-ink shadow-2xl ${wide ? 'max-w-2xl' : 'max-w-md'}`}
+      className={`m-auto w-[calc(100%-2rem)] rounded-2xl bg-panel p-0 text-ink shadow-2xl ${wide ? 'max-w-2xl' : 'max-w-md'}`}
     >
       {open && (
         <div className="p-6">
           <div className="mb-5 flex items-start justify-between gap-4">
-            <h2 className="text-xl font-bold">{title}</h2>
+            <h2 className="text-lg font-bold">{title}</h2>
             <button onClick={onClose} className="-m-1 rounded p-1 text-ink-soft hover:text-ink" aria-label="Close">
               <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             </button>
@@ -112,8 +113,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight [font-stretch:80%]">{title}</h1>
-        {subtitle && <p className="mt-1 text-ink-soft">{subtitle}</p>}
+        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-ink-soft">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -122,8 +123,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 
 export function Empty({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <div className="rounded-lg border-2 border-dashed border-line px-6 py-14 text-center">
-      <p className="text-lg font-semibold">{title}</p>
+    <div className="rounded-2xl border-2 border-dashed border-line bg-panel/60 px-6 py-14 text-center">
+      <p className="text-base font-semibold">{title}</p>
       {children && <div className="mt-2 text-ink-soft">{children}</div>}
     </div>
   );
@@ -134,7 +135,7 @@ export function Loading({ label = 'Loading…' }: { label?: string }) {
 }
 
 export function ErrorNote({ message }: { message: string }) {
-  return <p role="alert" className="rounded-md border border-chili/30 bg-chili/10 px-4 py-3 text-sm text-chili">{message}</p>;
+  return <p role="alert" className="rounded-xl border border-chili/30 bg-chili/10 px-4 py-3 text-sm text-chili">{message}</p>;
 }
 
 export function VegMark({ veg }: { veg: boolean }) {
@@ -146,5 +147,29 @@ export function VegMark({ veg }: { veg: boolean }) {
     >
       <span className={`h-1.5 w-1.5 rounded-full ${veg ? 'bg-free' : 'bg-chili'}`} />
     </span>
+  );
+}
+
+export function Card({ className = '', children }: { className?: string; children: React.ReactNode }) {
+  return <div className={`rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)] ${className}`}>{children}</div>;
+}
+
+/** Dish photo, or a neutral placeholder when the dish has none (or the image fails to load). */
+export function DishImage({ src, alt, className = '' }: { src?: string; alt: string; className?: string }) {
+  return (
+    <div className={`relative overflow-hidden bg-steel-deep ${className}`}>
+      <UtensilsCrossed className="absolute inset-0 m-auto h-1/3 w-1/3 text-ink-soft/30" aria-hidden />
+      {src && (
+        // Images live on the restaurant's own R2 domain, unknown at build time, so next/image isn't used
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className="relative h-full w-full object-cover"
+          onError={(e) => (e.currentTarget.style.display = 'none')}
+        />
+      )}
+    </div>
   );
 }

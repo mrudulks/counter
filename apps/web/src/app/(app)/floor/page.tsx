@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ShoppingBag, Users } from 'lucide-react';
 import { useScope, useSession } from '@/lib/session';
 import { useFetch } from '@/lib/useFetch';
 import { useOrderEvents } from '@/lib/realtime';
@@ -11,10 +12,10 @@ import { Guard } from '@/components/Guard';
 import { Empty, ErrorNote, Loading, PageHeader } from '@/components/ui';
 import { useToast } from '@/components/toast';
 
-const STATUS: Record<TableStatus, { label: string; bar: string; text: string }> = {
-  available: { label: 'Free', bar: 'bg-free', text: 'text-free' },
-  occupied: { label: 'Seated', bar: 'bg-seated', text: 'text-[#8a600a]' },
-  reserved: { label: 'Reserved', bar: 'bg-reserved', text: 'text-reserved' },
+const STATUS: Record<TableStatus, { label: string; chip: string; ring: string }> = {
+  available: { label: 'Free', chip: 'bg-free/10 text-free', ring: 'hover:border-free/50' },
+  occupied: { label: 'Seated', chip: 'bg-seated/15 text-[#a86a00]', ring: 'border-seated/40 hover:border-seated' },
+  reserved: { label: 'Reserved', chip: 'bg-reserved/10 text-reserved', ring: 'hover:border-reserved/50' },
 };
 
 function Floor() {
@@ -50,8 +51,8 @@ function Floor() {
         title="Floor"
         subtitle={`${counts.available ?? 0} free, ${counts.occupied ?? 0} seated, ${counts.reserved ?? 0} reserved`}
         actions={
-          <Link href="/pos/takeaway" className="inline-flex h-10 items-center rounded-md bg-teal px-4 text-sm font-semibold text-white hover:bg-teal-deep">
-            New takeaway
+          <Link href="/pos/takeaway" className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-sm shadow-brand/25 hover:bg-brand-deep">
+            <ShoppingBag className="h-4 w-4" aria-hidden /> New takeaway
           </Link>
         }
       />
@@ -59,16 +60,16 @@ function Floor() {
       {!tables.data?.length ? (
         <Empty title="No tables yet">An admin can add tables under Tables.</Empty>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6">
           {tables.data.map((t) => {
             const s = STATUS[t.status];
             return (
-              <div key={t._id} className="group relative overflow-hidden rounded-lg bg-panel shadow-[0_1px_0_var(--color-line)]">
-                <span className={`absolute inset-x-0 top-0 h-1.5 ${s.bar}`} aria-hidden />
-                <Link href={`/pos/table/${t._id}`} className="block px-4 pb-4 pt-5 hover:bg-white">
-                  <p className="text-5xl font-black leading-none tracking-tight [font-stretch:62%]">{t.name}</p>
-                  <p className={`mt-3 text-sm font-semibold ${s.text}`}>{s.label}</p>
-                  <p className="text-sm text-ink-soft">
+              <div key={t._id} className={`group relative rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)] transition-colors ${s.ring}`}>
+                <Link href={`/pos/table/${t._id}`} className="block p-4">
+                  <span className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-semibold ${s.chip}`}>{s.label}</span>
+                  <p className="mt-4 text-3xl font-extrabold tracking-tight">{t.name}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-soft">
+                    <Users className="h-3.5 w-3.5" aria-hidden />
                     {t.currentOrder
                       ? `Order #${t.currentOrder.orderNumber}, ${money(t.currentOrder.total, restaurant?.currency)}`
                       : `${t.seats} seats`}
@@ -77,7 +78,7 @@ function Floor() {
                 {t.status !== 'occupied' && (
                   <button
                     onClick={() => toggleReserved(t)}
-                    className="absolute right-2 top-3 rounded px-2 py-1 text-xs font-medium text-ink-soft hover:bg-steel-deep hover:text-ink"
+                    className="absolute right-3 top-3 rounded-lg px-2 py-1 text-xs font-medium text-ink-soft hover:bg-steel hover:text-brand"
                   >
                     {t.status === 'reserved' ? 'Unreserve' : 'Reserve'}
                   </button>
@@ -90,10 +91,10 @@ function Floor() {
 
       {openTakeaways.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 text-lg font-bold">Open takeaways</h2>
+          <h2 className="mb-3 text-base font-bold">Open takeaways</h2>
           <div className="flex flex-wrap gap-2">
             {openTakeaways.map((o) => (
-              <Link key={o._id} href={`/pos/order/${o._id}`} className="rounded-md bg-panel px-4 py-3 hover:bg-white">
+              <Link key={o._id} href={`/pos/order/${o._id}`} className="rounded-xl border border-line bg-panel px-4 py-3 shadow-[var(--shadow-card)] hover:border-brand/40">
                 <span className="font-bold">#{o.orderNumber}</span>
                 <span className="ml-3 text-ink-soft">{money(o.total, restaurant?.currency)}</span>
               </Link>

@@ -58,7 +58,7 @@ function Restaurants() {
           {list.data.map((r) => {
             const isActive = active?._id === r._id;
             return (
-              <li key={r._id} className={`rounded-lg bg-panel p-5 ${isActive ? 'ring-2 ring-teal' : ''}`}>
+              <li key={r._id} className={`rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)] p-5 ${isActive ? 'ring-2 ring-brand' : ''}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="truncate text-xl font-bold">{r.name}</h2>

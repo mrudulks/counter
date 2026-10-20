@@ -9,6 +9,8 @@ import userRoutes from './routes/users';
 import menuRoutes from './routes/menu';
 import tableRoutes from './routes/tables';
 import orderRoutes from './routes/orders';
+import uploadRoutes from './routes/uploads';
+import { storageConfigured } from './utils/storage';
 
 export const app = express();
 
@@ -16,7 +18,7 @@ app.use(cors({ origin: env.corsOrigins, credentials: true }));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', imageUploads: storageConfigured });
 });
 
 app.use('/api/auth', authRoutes);
@@ -27,6 +29,7 @@ app.use(`${scoped}/users`, authenticate, restaurantAccess, userRoutes);
 app.use(`${scoped}/menu`, authenticate, restaurantAccess, menuRoutes);
 app.use(`${scoped}/tables`, authenticate, restaurantAccess, tableRoutes);
 app.use(`${scoped}/orders`, authenticate, restaurantAccess, orderRoutes);
+app.use(`${scoped}/uploads`, authenticate, restaurantAccess, uploadRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

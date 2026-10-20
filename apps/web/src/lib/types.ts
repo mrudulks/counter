@@ -28,6 +28,7 @@ export interface MenuItem {
   price: number;
   isVeg: boolean;
   isAvailable: boolean;
+  image: string;
 }
 
 export type TableStatus = 'available' | 'occupied' | 'reserved';
@@ -74,6 +75,8 @@ export interface Order {
 export interface Stats {
   revenueToday: number;
   ordersToday: number;
+  revenueYesterday: number;
+  ordersYesterday: number;
   openOrders: number;
   topItems: { name: string; quantity: number }[];
 }

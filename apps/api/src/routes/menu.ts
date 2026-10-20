@@ -4,6 +4,7 @@ import { MenuItem } from '../models/MenuItem';
 import { authorize, restaurantIdOf } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { HttpError } from '../utils/HttpError';
+import { deleteImage } from '../utils/storage';
 
 // Mounted at /api/restaurants/:restaurantId/menu
 const router = Router({ mergeParams: true });
@@ -15,6 +16,7 @@ const menuItemSchema = z.object({
   price: z.number().min(0),
   isVeg: z.boolean().optional(),
   isAvailable: z.boolean().optional(),
+  image: z.union([z.url({ protocol: /^https?$/ }), z.literal('')]).optional(),
 });
 
 router.get('/', async (req, res) => {
@@ -32,12 +34,11 @@ router.patch(
   authorize('superadmin', 'admin'),
   validateBody(menuItemSchema.partial()),
   async (req, res) => {
-    const item = await MenuItem.findOneAndUpdate(
-      { _id: req.params.itemId, restaurant: restaurantIdOf(req) },
-      req.body,
-      { new: true, runValidators: true },
-    );
-    if (!item) throw new HttpError(404, 'Menu item not found');
+    const filter = { _id: req.params.itemId, restaurant: restaurantIdOf(req) };
+    const before = await MenuItem.findOne(filter, 'image');
+    if (!before) throw new HttpError(404, 'Menu item not found');
+    const item = await MenuItem.findOneAndUpdate(filter, req.body, { new: true, runValidators: true });
+    if (req.body.image !== undefined && before.image !== item!.image) await deleteImage(before.image);
     res.json(item);
   },
 );
@@ -45,6 +46,7 @@ router.patch(
 router.delete('/:itemId', authorize('superadmin', 'admin'), async (req, res) => {
   const item = await MenuItem.findOneAndDelete({ _id: req.params.itemId, restaurant: restaurantIdOf(req) });
   if (!item) throw new HttpError(404, 'Menu item not found');
+  await deleteImage(item.image);
   res.json({ message: 'Menu item deleted' });
 });
 

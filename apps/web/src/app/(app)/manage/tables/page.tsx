@@ -87,8 +87,8 @@ function Tables() {
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
           {tables.data.map((t) => (
-            <li key={t._id} className="rounded-lg bg-panel p-4">
-              <p className="text-4xl font-black [font-stretch:62%]">{t.name}</p>
+            <li key={t._id} className="rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)] p-4">
+              <p className="text-4xl font-black">{t.name}</p>
               <p className="text-sm text-ink-soft">{t.seats} seats</p>
               <div className="mt-3 flex gap-1">
                 <Button size="sm" variant="secondary" onClick={() => setEditing(t)}>Edit</Button>

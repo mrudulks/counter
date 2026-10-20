@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Clock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useScope } from '@/lib/session';
 import { useOrderEvents } from '@/lib/realtime';
@@ -32,17 +33,20 @@ function Ticket({ order, isNew, onAdvance }: { order: Order; isNew: boolean; onA
   const bulk = pending.length ? { items: pending, label: 'Start all' } : cooking.length ? { items: cooking, label: 'All ready' } : null;
 
   return (
-    <article className={`ticket flex w-72 shrink-0 flex-col px-4 pb-5 pt-6 ${isNew ? 'ticket-new' : ''}`} aria-label={`Order ${order.orderNumber}`}>
-      <header className="flex items-baseline justify-between border-b-2 border-ink pb-2">
-        <p className="text-2xl font-bold">{order.table?.name ?? 'TAKEAWAY'}</p>
-        <p className="text-sm">#{order.orderNumber}</p>
+    <article className={`ticket flex w-72 shrink-0 flex-col overflow-hidden ${late ? 'border-chili/50' : ''} ${isNew ? 'ticket-new' : ''}`} aria-label={`Order ${order.orderNumber}`}>
+      <header className={`flex items-center justify-between px-4 py-3 ${late ? 'bg-chili/10' : 'bg-brand-soft'}`}>
+        <div>
+          <p className="text-lg font-bold">{order.table?.name ?? 'Takeaway'}</p>
+          <p className={`flex items-center gap-1 text-xs ${late ? 'font-semibold text-chili' : 'text-ink-soft'}`}>
+            <Clock className="h-3 w-3" aria-hidden />
+            {clockTime(order.createdAt)}, {age < 1 ? 'just in' : `${age} min`}
+            {late && ' (running late)'}
+          </p>
+        </div>
+        <span className="rounded-lg bg-white px-2 py-1 text-xs font-bold text-ink">#{order.orderNumber}</span>
       </header>
-      <p className={`mt-1.5 text-sm ${late ? 'font-bold text-chili' : 'text-ink-soft'}`}>
-        {clockTime(order.createdAt)}, {age < 1 ? 'just in' : `${age} min`}
-        {late && ' (running late)'}
-      </p>
 
-      <ul className="mt-3 flex-1 space-y-1">
+      <ul className="flex-1 space-y-1 p-2">
         {items.map((item) => {
           const next = NEXT[item.status];
           const done = item.status === 'ready';
@@ -51,17 +55,17 @@ function Ticket({ order, isNew, onAdvance }: { order: Order; isNew: boolean; onA
               <button
                 disabled={!next}
                 onClick={() => next && onAdvance(order, [item])}
-                className={`flex w-full items-start gap-3 rounded px-2 py-2 text-left transition-colors ${
-                  done ? 'text-ink-soft' : 'hover:bg-ink/5'
-                } ${item.status === 'preparing' ? 'bg-seated/15' : ''}`}
+                className={`flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors ${
+                  done ? 'text-ink-soft' : 'hover:bg-steel'
+                } ${item.status === 'preparing' ? 'bg-seated/10' : ''}`}
               >
-                <span className={`text-xl font-bold leading-6 ${done ? 'line-through' : ''}`}>{item.quantity}</span>
+                <span className={`flex h-6 min-w-6 items-center justify-center rounded-md text-sm font-bold ${done ? 'bg-steel-deep line-through' : 'bg-ink text-white'}`}>{item.quantity}</span>
                 <span className="flex-1">
-                  <span className={`block text-[17px] leading-6 ${done ? 'line-through' : 'font-bold'}`}>{item.name}</span>
-                  {item.notes && <span className="block text-sm italic">↳ {item.notes}</span>}
+                  <span className={`block text-[15px] leading-6 ${done ? 'line-through' : 'font-semibold'}`}>{item.name}</span>
+                  {item.notes && <span className="block text-xs font-medium text-[#a86a00]">↳ {item.notes}</span>}
                 </span>
-                <span className={`mt-0.5 shrink-0 rounded px-2 py-0.5 font-sans text-xs font-semibold ${
-                  done ? 'bg-free text-white' : next?.to === 'ready' ? 'bg-ink text-paper' : 'border border-ink/40'
+                <span className={`mt-0.5 shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${
+                  done ? 'bg-free/15 text-free' : next?.to === 'ready' ? 'bg-brand text-white' : 'border border-line bg-white text-ink'
                 }`}>
                   {done ? 'Ready' : next!.label}
                 </span>
@@ -71,12 +75,12 @@ function Ticket({ order, isNew, onAdvance }: { order: Order; isNew: boolean; onA
         })}
       </ul>
 
-      {order.notes && <p className="mt-3 border-t border-dashed border-ink/30 pt-2 text-sm">Note: {order.notes}</p>}
+      {order.notes && <p className="mx-4 border-t border-dashed border-line pt-2 text-sm">Note: {order.notes}</p>}
 
       {bulk && (
         <button
           onClick={() => onAdvance(order, bulk.items)}
-          className="mt-4 h-11 rounded-md bg-ink font-sans text-sm font-semibold text-paper hover:bg-ink/90"
+          className="m-3 mt-1 h-11 rounded-xl bg-brand text-sm font-semibold text-white shadow-sm shadow-brand/25 hover:bg-brand-deep"
         >
           {bulk.label}
         </button>
@@ -139,11 +143,11 @@ function Kitchen() {
   const waiting = tickets.reduce((s, o) => s + o.items.filter((i) => i.status === 'pending').length, 0);
 
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-10">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3 px-4 sm:px-6 lg:px-10">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight [font-stretch:80%]">Kitchen</h1>
-          <p className="mt-1 text-ink-soft">
+          <h1 className="text-2xl font-bold tracking-tight">Kitchen</h1>
+          <p className="mt-1 text-sm text-ink-soft">
             {tickets.length ? `${tickets.length} on the rail, ${waiting} not started` : 'Nothing on the rail'}. Tap a dish to move it along.
           </p>
         </div>
@@ -151,17 +155,14 @@ function Kitchen() {
       </div>
 
       {tickets.length === 0 ? (
-        <div className="mx-4 rounded-lg border-2 border-dashed border-line py-20 text-center text-lg text-ink-soft sm:mx-6 lg:mx-10">
+        <div className="mx-4 rounded-2xl border-2 border-dashed border-line bg-panel/60 py-20 text-center text-ink-soft sm:mx-6 lg:mx-8">
           New orders will drop onto the rail as soon as the floor sends them.
         </div>
       ) : (
-        <div className="relative">
-          <div className="absolute inset-x-0 top-0 h-3 bg-gradient-to-b from-[#b9c3c9] to-[#d3dadd] shadow-inner" aria-hidden />
-          <div className="flex items-start gap-4 overflow-x-auto px-4 pb-8 pt-1 sm:px-6 lg:px-10">
-            {tickets.map((o) => (
-              <Ticket key={o._id} order={o} isNew={fresh.has(o._id)} onAdvance={advance} />
-            ))}
-          </div>
+        <div className="flex items-start gap-4 overflow-x-auto px-4 pb-8 sm:px-6 lg:px-8">
+          {tickets.map((o) => (
+            <Ticket key={o._id} order={o} isNew={fresh.has(o._id)} onAdvance={advance} />
+          ))}
         </div>
       )}
     </div>

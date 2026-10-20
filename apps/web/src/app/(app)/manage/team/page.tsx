@@ -105,7 +105,7 @@ function Team() {
           <Button className="mt-4" onClick={() => setEditing('new')}>Add team member</Button>
         </Empty>
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-panel">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[36rem] text-left text-sm">
             <thead className="border-b border-line text-ink-soft">
               <tr>

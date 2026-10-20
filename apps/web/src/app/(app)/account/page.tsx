@@ -34,7 +34,7 @@ export default function AccountPage() {
   return (
     <>
       <PageHeader title="Your account" subtitle={user ? `${user.name}, ${user.email}` : undefined} />
-      <form onSubmit={submit} className="max-w-md space-y-4 rounded-lg bg-panel p-6">
+      <form onSubmit={submit} className="max-w-md space-y-4 rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)] p-6">
         <h2 className="text-lg font-bold">Change password</h2>
         {error && <ErrorNote message={error} />}
         <Field label="Current password">

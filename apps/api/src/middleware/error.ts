@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import { HttpError } from '../utils/HttpError';
 
 export function notFound(_req: Request, _res: Response, next: NextFunction) {
@@ -9,6 +10,10 @@ export function notFound(_req: Request, _res: Response, next: NextFunction) {
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (err instanceof HttpError) {
     return res.status(err.status).json({ message: err.message });
+  }
+  if (err instanceof multer.MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'Image must be 5 MB or smaller' : err.message;
+    return res.status(400).json({ message });
   }
   if (err instanceof mongoose.Error.CastError) {
     return res.status(400).json({ message: `Invalid ${err.path}` });

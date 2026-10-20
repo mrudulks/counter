@@ -272,12 +272,19 @@ router.get('/stats/summary', authorize('superadmin', 'admin'), async (req, res) 
   const restaurant = new Types.ObjectId(restaurantIdOf(req));
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
+  const startOfYesterday = new Date(startOfDay.getTime() - 24 * 60 * 60 * 1000);
+  // Compare against the same stretch of yesterday (midnight → this time of day)
+  const sameTimeYesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const [today, openOrders, topItems] = await Promise.all([
+  const totals = (from: Date, to?: Date) =>
     Order.aggregate([
-      { $match: { restaurant, status: 'completed', updatedAt: { $gte: startOfDay } } },
+      { $match: { restaurant, status: 'completed', updatedAt: { $gte: from, ...(to && { $lt: to }) } } },
       { $group: { _id: null, revenue: { $sum: '$total' }, orders: { $sum: 1 } } },
-    ]),
+    ]);
+
+  const [today, yesterday, openOrders, topItems] = await Promise.all([
+    totals(startOfDay),
+    totals(startOfYesterday, sameTimeYesterday),
     Order.countDocuments({ restaurant, status: 'open' }),
     Order.aggregate([
       { $match: { restaurant, status: 'completed', updatedAt: { $gte: startOfDay } } },
@@ -292,6 +299,8 @@ router.get('/stats/summary', authorize('superadmin', 'admin'), async (req, res) 
   res.json({
     revenueToday: today[0]?.revenue ?? 0,
     ordersToday: today[0]?.orders ?? 0,
+    revenueYesterday: yesterday[0]?.revenue ?? 0,
+    ordersYesterday: yesterday[0]?.orders ?? 0,
     openOrders,
     topItems: topItems.map((t) => ({ name: t._id, quantity: t.quantity })),
   });

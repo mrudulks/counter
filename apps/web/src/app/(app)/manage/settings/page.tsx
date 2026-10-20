@@ -10,7 +10,7 @@ function Settings() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Details printed on bills and used for tax." />
-      <div className="max-w-lg rounded-lg bg-panel p-6">
+      <div className="max-w-lg rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)] p-6">
         <RestaurantForm
           key={restaurant!._id}
           restaurant={restaurant}

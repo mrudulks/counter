@@ -35,14 +35,14 @@ function Orders() {
   return (
     <>
       <PageHeader title="Orders" subtitle="Updates live as the floor and kitchen work." />
-      <div className="mb-5 inline-flex rounded-md bg-steel-deep p-1" role="tablist">
+      <div className="mb-5 inline-flex rounded-xl bg-steel-deep p-1" role="tablist">
         {TABS.map((t) => (
           <button
             key={t.status}
             role="tab"
             aria-selected={tab === t.status}
             onClick={() => setTab(t.status)}
-            className={`rounded px-4 py-1.5 text-sm font-semibold ${tab === t.status ? 'bg-panel shadow-sm' : 'text-ink-soft'}`}
+            className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === t.status ? 'bg-panel text-brand shadow-sm' : 'text-ink-soft'}`}
           >
             {t.label}
           </button>
@@ -58,7 +58,7 @@ function Orders() {
           {tab === 'open' && 'Start one from the Floor.'}
         </Empty>
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-panel">
+        <div className="overflow-x-auto rounded-2xl border border-line bg-panel shadow-[var(--shadow-card)]">
           <table className="w-full min-w-[40rem] text-left text-sm">
             <thead className="border-b border-line text-ink-soft">
               <tr>

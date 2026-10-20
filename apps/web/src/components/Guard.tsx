@@ -18,7 +18,7 @@ export function Guard({ roles, scoped = true, children }: { roles: Role[]; scope
       <Empty title="Pick a restaurant first">
         {user.role === 'superadmin' ? (
           <>
-            Choose one from <Link href="/restaurants" className="font-semibold text-teal underline">Restaurants</Link> to work in it.
+            Choose one from <Link href="/restaurants" className="font-semibold text-brand underline">Restaurants</Link> to work in it.
           </>
         ) : (
           'Your account isn’t linked to a restaurant. Ask your administrator to fix it.'

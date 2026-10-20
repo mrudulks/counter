@@ -3,13 +3,23 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { LogOut, UserRound } from 'lucide-react';
 import { useSession } from '@/lib/session';
+import { useRealtimeStatus } from '@/lib/realtime';
 import { NAV } from '@/components/nav';
 import { Loading } from '@/components/ui';
 import { OrderNotifier } from '@/components/OrderNotifier';
-import { useRealtimeStatus } from '@/lib/realtime';
 
 const ROLE_LABEL = { superadmin: 'Super admin', admin: 'Admin', staff: 'Floor staff', kitchen: 'Kitchen' };
+
+function Logo() {
+  return (
+    <Link href="/" className="flex items-center gap-2.5">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-lg font-extrabold text-white">C</span>
+      <span className="text-lg font-extrabold tracking-tight">Counter</span>
+    </Link>
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, ready, restaurant, logout } = useSession();
@@ -24,60 +34,74 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!ready || !user) return <Loading />;
 
   const items = NAV.filter((n) => n.roles.includes(user.role) && (!n.scoped || restaurant));
+  const initials = user.name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[15rem_1fr]">
-      <aside className="sticky top-0 z-30 bg-ink text-steel lg:h-screen lg:overflow-y-auto">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 lg:block lg:px-5 lg:pb-4 lg:pt-6">
-          <div className="min-w-0">
-            <Link href="/" className="block text-2xl font-black tracking-tight [font-stretch:70%]">
-              Counter
+    <div className="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
+      <aside className="sticky top-0 z-30 border-b border-line bg-panel lg:flex lg:h-screen lg:flex-col lg:border-b-0 lg:border-r">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 lg:block lg:px-6 lg:pb-5 lg:pt-6">
+          <Logo />
+          <div className="flex items-center gap-1 lg:hidden">
+            <Link href="/account" className="rounded-lg p-2 text-ink-soft hover:bg-steel-deep" aria-label="Account">
+              <UserRound className="h-5 w-5" />
             </Link>
-            <p className="truncate text-sm text-steel/70">
-              {restaurant?.name ?? (user.role === 'superadmin' ? 'No restaurant selected' : '—')}
-            </p>
-            {restaurant && (
-              <p className="mt-1 flex items-center gap-1.5 text-xs text-steel/60" title="Orders update instantly while live">
-                <span className={`h-2 w-2 rounded-full ${live ? 'bg-free' : 'bg-seated'}`} aria-hidden />
-                {live ? 'Live updates on' : 'Reconnecting…'}
-              </p>
-            )}
-          </div>
-          <div className="flex shrink-0 gap-1 text-sm lg:hidden">
-            <Link href="/account" className="rounded-md px-3 py-1.5 text-steel/80 hover:bg-white/10">Account</Link>
-            <button onClick={logout} className="rounded-md px-3 py-1.5 text-steel/80 hover:bg-white/10">Sign out</button>
+            <button onClick={logout} className="rounded-lg p-2 text-ink-soft hover:bg-steel-deep" aria-label="Sign out">
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:px-3" aria-label="Main">
-          {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        {restaurant && (
+          <div className="mx-4 mb-3 hidden rounded-xl bg-steel px-3 py-2.5 lg:mx-4 lg:block">
+            <p className="truncate text-sm font-semibold">{restaurant.name}</p>
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-soft" title="Orders update instantly while live">
+              <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-free' : 'bg-seated'}`} aria-hidden />
+              {live ? 'Live updates on' : 'Reconnecting…'}
+            </p>
+          </div>
+        )}
+
+        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:overflow-y-auto lg:px-4" aria-label="Main">
+          {items.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={href}
+                href={href}
                 aria-current={active ? 'page' : undefined}
-                className={`whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium transition-colors ${
-                  active ? 'bg-steel text-ink' : 'text-steel/80 hover:bg-white/10 hover:text-steel'
+                className={`flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                  active ? 'bg-brand-soft text-brand' : 'text-ink-soft hover:bg-steel hover:text-ink'
                 }`}
               >
-                {item.label}
+                <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 1.75} aria-hidden />
+                {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="hidden border-t border-white/10 px-5 py-4 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block">
-          <p className="truncate font-semibold">{user.name}</p>
-          <p className="text-sm text-steel/70">{ROLE_LABEL[user.role]}</p>
-          <div className="mt-3 flex gap-3 text-sm">
-            <Link href="/account" className="text-steel/80 underline-offset-2 hover:underline">Account</Link>
-            <button onClick={logout} className="text-steel/80 underline-offset-2 hover:underline">Sign out</button>
+        <div className="hidden border-t border-line p-4 lg:block">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand">
+              {initials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{user.name}</p>
+              <p className="text-xs text-ink-soft">{ROLE_LABEL[user.role]}</p>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Link href="/account" className="flex items-center justify-center gap-1.5 rounded-lg border border-line py-1.5 text-xs font-medium text-ink-soft hover:text-ink">
+              <UserRound className="h-3.5 w-3.5" aria-hidden /> Account
+            </Link>
+            <button onClick={logout} className="flex items-center justify-center gap-1.5 rounded-lg border border-line py-1.5 text-xs font-medium text-ink-soft hover:text-chili">
+              <LogOut className="h-3.5 w-3.5" aria-hidden /> Sign out
+            </button>
           </div>
         </div>
       </aside>
 
-      <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
+      <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       {restaurant && <OrderNotifier />}
     </div>
   );

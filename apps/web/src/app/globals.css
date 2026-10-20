@@ -1,22 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-steel: #e8ecee;
-  --color-steel-deep: #dbe1e4;
-  --color-panel: #f7f9fa;
-  --color-line: #c8d1d6;
-  --color-ink: #1e2b33;
-  --color-ink-soft: #566771;
-  --color-teal: #0e6b6b;
-  --color-teal-deep: #0a5353;
-  --color-paper: #fffcf4;
-  --color-free: #2e8a57;
-  --color-seated: #d99a14;
-  --color-reserved: #4a58c0;
-  --color-chili: #b8322a;
+  /* Surfaces */
+  --color-steel: #f5f5fa;        /* page background */
+  --color-steel-deep: #ededf5;   /* hover, tracks, inactive chips */
+  --color-panel: #ffffff;        /* cards */
+  --color-line: #e8e8f0;
+  --color-paper: #ffffff;
 
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
-  --font-ticket: var(--font-courier), ui-monospace, monospace;
+  /* Text */
+  --color-ink: #1b1d2e;
+  --color-ink-soft: #6c6f82;
+
+  /* Brand */
+  --color-brand: #5a4de6;
+  --color-brand-deep: #4637cf;
+  --color-brand-soft: #efedfe;
+
+  /* Status */
+  --color-free: #16a35a;
+  --color-seated: #e59a12;
+  --color-reserved: #2f7ae5;
+  --color-chili: #e5484d;
+
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-ticket: var(--font-jakarta), system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(27 29 46 / 0.04), 0 4px 16px -8px rgb(27 29 46 / 0.08);
 }
 
 html {
@@ -31,30 +41,24 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-teal);
+  outline: 3px solid color-mix(in srgb, var(--color-brand) 55%, transparent);
   outline-offset: 2px;
 }
 
-/* Kitchen / receipt ticket: paper with perforated top and bottom edges */
+/* Order / kitchen ticket card */
 .ticket {
-  --hole: 6px;
-  background: var(--color-paper);
-  font-family: var(--font-ticket);
-  -webkit-mask:
-    radial-gradient(circle var(--hole) at 50% 0, #0000 98%, #000) 50% 0 / calc(var(--hole) * 3) 51% repeat-x,
-    radial-gradient(circle var(--hole) at 50% 100%, #0000 98%, #000) 50% 100% / calc(var(--hole) * 3) 51% repeat-x;
-  mask:
-    radial-gradient(circle var(--hole) at 50% 0, #0000 98%, #000) 50% 0 / calc(var(--hole) * 3) 51% repeat-x,
-    radial-gradient(circle var(--hole) at 50% 100%, #0000 98%, #000) 50% 100% / calc(var(--hole) * 3) 51% repeat-x;
-  filter: drop-shadow(0 1px 1px rgb(30 43 51 / 0.18));
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
 }
 
-/* A ticket that just arrived on the rail drops in once */
+/* A ticket that just arrived on the kitchen rail drops in once */
 @keyframes ticket-drop {
-  from { transform: translateY(-14px) rotate(-1.2deg); opacity: 0; }
+  from { transform: translateY(-12px); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
-.ticket-new { animation: ticket-drop 420ms cubic-bezier(.2,.9,.3,1.2); }
+.ticket-new { animation: ticket-drop 380ms cubic-bezier(.2,.9,.3,1.15); }
 
 @keyframes toast-in {
   from { transform: translateY(8px); opacity: 0; }
@@ -62,7 +66,7 @@ body {
 }
 .toast-in { animation: toast-in 180ms ease-out; }
 
-dialog::backdrop { background: rgb(30 43 51 / 0.45); }
+dialog::backdrop { background: rgb(27 29 46 / 0.4); backdrop-filter: blur(2px); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -28,6 +28,17 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   corsOrigins: parseOrigins(process.env.CORS_ORIGIN ?? 'http://localhost:8000'),
+  /** Cloudflare R2 (S3-compatible) for menu images. Uploads are disabled until all are set. */
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID ?? '',
+    accessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? '',
+    bucket: process.env.R2_BUCKET ?? '',
+    /** Public base URL serving the bucket, e.g. https://pub-xxxx.r2.dev or https://images.example.com */
+    publicUrl: (process.env.R2_PUBLIC_URL ?? '').replace(/\/+$/, ''),
+    /** Override for testing against another S3-compatible endpoint */
+    endpoint: process.env.R2_ENDPOINT ?? '',
+  },
   superadmin: {
     name: process.env.SUPERADMIN_NAME ?? 'Super Admin',
     email: (process.env.SUPERADMIN_EMAIL ?? 'superadmin@pos.local').toLowerCase(),

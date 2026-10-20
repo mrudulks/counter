@@ -40,16 +40,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             role={t.tone === 'error' ? 'alert' : 'status'}
             onClick={() => dismiss(t.id)}
-            className={`toast-in pointer-events-auto w-full max-w-sm cursor-pointer rounded-md px-4 py-3 text-sm shadow-lg sm:w-80 ${
+            className={`toast-in pointer-events-auto w-full max-w-sm cursor-pointer rounded-xl px-4 py-3 text-sm shadow-lg sm:w-80 ${
               t.tone === 'error'
                 ? 'bg-chili font-medium text-white'
                 : t.tone === 'notice'
-                  ? 'border-l-4 border-seated bg-paper text-ink'
-                  : 'bg-ink font-medium text-steel'
+                  ? 'border border-line border-l-4 border-l-brand bg-panel text-ink'
+                  : 'bg-ink font-medium text-white'
             }`}
           >
             {t.title && <p className="font-bold">{t.title}</p>}
-            <p className={t.tone === 'notice' ? 'mt-0.5 font-ticket' : ''}>{t.message}</p>
+            <p className={t.tone === 'notice' ? 'mt-0.5 text-ink-soft' : ''}>{t.message}</p>
           </div>
         ))}
       </div>

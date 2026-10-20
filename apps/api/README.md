@@ -54,7 +54,8 @@ All routes except login need `Authorization: Bearer <token>`. Restaurant-scoped 
 | POST | `/api/restaurants/:rid/orders/:id/items/status` `{itemIds, status}` | bulk version, same role rules |
 | POST | `/api/restaurants/:rid/orders/:id/complete` `{paymentMethod: cash|card|upi}` | staff, admin+ |
 | POST | `/api/restaurants/:rid/orders/:id/cancel` | staff (if nothing cooking), admin+ |
-| GET | `/api/restaurants/:rid/orders/stats/summary` | admin+ |
+| GET | `/api/restaurants/:rid/orders/stats/summary` | admin+ (today vs same time yesterday) |
+| POST | `/api/restaurants/:rid/uploads/menu-image` (multipart `file`) → `{url}` | admin+ |
 
 ### Order rules
 - One open order per table; creating a dine-in order marks the table `occupied`, completing/cancelling frees it.
@@ -83,3 +84,18 @@ Every order change is broadcast to everyone in that restaurant's room:
 | `cancelled` | order cancelled | — |
 
 `order` is the full populated order; `actor` is `{ id, name }` of whoever made the change.
+
+## Menu images (Cloudflare R2)
+
+Admins upload dish photos from the Menu page. The browser sends the file to the API, which checks it (JPG/PNG/WebP, max 5 MB, verified by file signature) and stores it in R2 under `restaurants/<id>/menu/`. Replacing or deleting a dish's photo deletes the old file.
+
+Set these on the API (uploads stay disabled until all five are set; `GET /api/health` reports `imageUploads`):
+
+| Variable | Where to find it |
+|---|---|
+| `R2_ACCOUNT_ID` | Cloudflare dashboard → R2 overview (Account ID) |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 → Manage API tokens → Create token, *Object Read & Write*, scoped to the bucket |
+| `R2_BUCKET` | your bucket's name |
+| `R2_PUBLIC_URL` | bucket → Settings → Public access: the `https://pub-….r2.dev` URL or your custom domain |
+
+No bucket CORS rules are needed — browsers never talk to R2 directly except to load public images.
